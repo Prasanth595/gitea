@@ -27282,6 +27282,9 @@
           },
           "409": {
             "$ref": "#/components/responses/error"
+          },
+          "422": {
+            "$ref": "#/components/responses/error"
           }
         },
         "summary": "Merge a branch from upstream",
