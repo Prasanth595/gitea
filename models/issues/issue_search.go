@@ -54,6 +54,7 @@ type IssuesOptions struct { //nolint:revive // export stutter
 	Owner          *user_model.User   // issues permission scope, it could be an organization or a user
 	Team           *organization.Team // issues permission scope
 	Doer           *user_model.User   // issues permission scope
+	TimerTrackerID int64
 }
 
 // Copy returns a copy of the options.
@@ -287,6 +288,10 @@ func applyConditions(sess db.Session, opts *IssuesOptions) {
 	if opts.Doer != nil && !opts.Doer.IsAdmin {
 		sess.And(issuePullAccessibleRepoCond("issue.repo_id", opts.Doer.ID, opts.Owner, opts.Team, opts.IsPull.Value()))
 	}
+
+	if opts.TimerTrackerID > 0 {
+		applyTimerTrackerCondition(sess, opts.TimerTrackerID)
+	}
 }
 
 // teamUnitsRepoReaderCond returns query condition for those repo id in the special org team with special units access
@@ -482,6 +487,12 @@ func applySubscribedCondition(sess db.Session, subscriberID int64) {
 			),
 		),
 	)
+}
+
+func applyTimerTrackerCondition(sess db.Session, timerTrackerID int64) {
+	sess.And(builder.In("issue.id",
+		builder.Select("issue_id").From("stopwatch").Where(builder.Eq{"user_id": timerTrackerID}),
+	))
 }
 
 // Issues returns a list of issues by given conditions.
